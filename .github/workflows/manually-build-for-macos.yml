@@ -18,7 +18,7 @@ on:
         type: choice
         options:
           - x86_64
-          - aarch64
+          - arm64
 
       build-type:
         description: choose a build type
