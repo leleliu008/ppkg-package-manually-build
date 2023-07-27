@@ -47,6 +47,8 @@ jobs:
   build:
 
     runs-on: macos-12
+
+    steps:
       - run: brew install openssh
 
       - uses: leleliu008/github-actions-vagrant@main
