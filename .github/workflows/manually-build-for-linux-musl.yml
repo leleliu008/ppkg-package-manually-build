@@ -1,4 +1,4 @@
-name: manually build package for linux against musl-libc
+name: manually build package for linux-musl
 
 on:
   workflow_dispatch:

@@ -33,10 +33,9 @@ on:
         description: choose a link type
         type: choice
         options:
-          - static-only
-          - shared-only
           - static-prefered
           - shared-prefered
+          - shared-only
         required: true
         default: static-only
 

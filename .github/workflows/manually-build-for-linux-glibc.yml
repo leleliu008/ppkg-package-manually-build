@@ -1,4 +1,4 @@
-name: manually build package for linux against glibc
+name: manually build package for linux-glibc
 
 on:
   workflow_dispatch:
