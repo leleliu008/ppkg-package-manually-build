@@ -1,0 +1,111 @@
+name: manually build package for linux against musl-libc
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      target-arch:
+        description: choose a target arch to be built for
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+          - ppc64le
+          - riscv64
+          - s390x
+
+      build-type:
+        description: choose a build type
+        type: choice
+        options:
+          - release
+          - debug
+        required: true
+        default: release
+
+      link-type:
+        description: choose a link type
+        type: choice
+        options:
+          - static-only
+          - shared-only
+          - static-prefered
+          - shared-prefered
+        required: true
+        default: static-only
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-vv'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: create run.sh
+        run: |
+          cat > run.sh <<EOF
+          set -e
+
+          COLOR_GREEN='\033[0;32m'        # Green
+          COLOR_PURPLE='\033[0;35m'       # Purple
+          COLOR_OFF='\033[0m'             # Reset
+
+          echo() {
+              printf '%b\n' "\$*"
+          }
+
+          run() {
+              echo "\${COLOR_PURPLE}==>\${COLOR_OFF} \${COLOR_GREEN}\$@\${COLOR_OFF}"
+              eval "\$*"
+          }
+
+          run uname -a
+
+          run apk update
+          run apk add g++ libc-dev linux-headers
+
+          run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+          run chmod a+x ppkg
+          run ./ppkg setup
+          run ./ppkg update
+          run ./ppkg install ${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+          run ./ppkg pack    ${{ github.event.inputs.package-name }} -o .
+          EOF
+
+          chmod +x run.sh
+
+      - name: execute run.sh in the docker container
+        run: |
+          case ${{ github.event.inputs.target-arch }} in
+            x86_64)  IMAGE='alpine:3.18'    ;;
+            aarch64) IMAGE='arm64v8/alpine' ;;
+            ppc64le) IMAGE='ppc64le/alpine' ;;
+            riscv64) IMAGE='riscv64/alpine:edge' ;;
+            s390x)   IMAGE='s390x/alpine'   ;;
+          esac
+
+          if [ '${{ github.event.inputs.target-arch }}' != 'x86_64' ] ; then
+            # https://github.com/multiarch/qemu-user-static
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          fi
+
+          docker run -v $PWD:$PWD -w $PWD --name alpine "$IMAGE" sh run.sh
+
+      - run: ls
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.inputs.package-name }}---linux-${{ github.event.inputs.target-arch }}.tar.xz
+          path: ${{ github.event.inputs.package-name }}-*-linux-${{ github.event.inputs.target-arch }}*.tar.xz

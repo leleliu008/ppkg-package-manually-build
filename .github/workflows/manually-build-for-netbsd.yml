@@ -1,0 +1,84 @@
+name: manually build package for netbsd
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      target-arch:
+        description: choose a target arch to be built for
+        type: choice
+        options:
+          - amd64
+
+      build-type:
+        description: choose a build type
+        type: choice
+        options:
+          - release
+          - debug
+        required: true
+        default: release
+
+      link-type:
+        description: choose a link type
+        type: choice
+        options:
+          - static-only
+          - shared-only
+          - static-prefered
+          - shared-prefered
+        required: true
+        default: static-only
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-vv'
+
+jobs:
+  build:
+
+    runs-on: macos-12
+
+    steps:
+      - uses: leleliu008/github-actions-vagrant@main
+        with:
+          mem: 4096
+          box: generic/netbsd9
+          run: |
+            export HOME=/home/vagrant
+
+            run sudo sed -i 's/#ETCCERTSDIR=/ETCCERTSDIR=/' /usr/pkg/etc/ca-certificates-dir.conf
+            run sudo update-ca-certificates
+
+            unset ETCCERTSDIR
+
+            ETCCERTSDIR=$(sed -n '/^ETCCERTSDIR=/p' /usr/pkg/etc/ca-certificates-dir.conf | sed 's|ETCCERTSDIR=\(.*\)|\1|')
+
+            if [ -n "$ETCCERTSDIR" ] ; then
+                export SSL_CERT_FILE="$ETCCERTSDIR/ca-certificates.crt"
+            fi
+
+            run sudo pkgin -y update
+            run sudo pkgin -y install llvm
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+            run ./ppkg setup
+            run ./ppkg update
+            run ./ppkg install ${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+            run ./ppkg pack    ${{ github.event.inputs.package-name }}
+
+      - run: scp -i $VAGRANT_CWD/.vagrant/machines/default/virtualbox/private_key -o StrictHostKeyChecking=no -r -P 2222 vagrant@127.0.0.1:/home/vagrant/.ppkg/packed/${{ github.event.inputs.package-name }}-*-netbsd-amd64.tar.xz .
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.inputs.package-name }}---netbsd-amd64.tar.xz
+          path: ${{ github.event.inputs.package-name }}-*-netbsd-amd64.tar.xz

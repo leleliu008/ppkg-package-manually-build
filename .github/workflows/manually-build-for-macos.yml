@@ -1,0 +1,68 @@
+name: manually build package for macos
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      target-version:
+        description: input a target version to be built
+        required: false
+        default: '13.0'
+
+      target-arch:
+        description: choose a target arch to be built for
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+
+      build-type:
+        description: choose a build type
+        type: choice
+        options:
+          - release
+          - debug
+        required: true
+        default: release
+
+      link-type:
+        description: choose a link type
+        type: choice
+        options:
+          - static-only
+          - shared-only
+          - static-prefered
+          - shared-prefered
+        required: true
+        default: static-only
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-vv'
+
+jobs:
+  build:
+
+    runs-on: macos-13
+
+    steps:
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/xcpkg/master/xcpkg
+      - run: chmod a+x xcpkg
+      - run: ./xcpkg setup
+      - run: ./xcpkg update
+      - run: ./xcpkg install MacOSX/${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+      - run: ./xcpkg pack    MacOSX/${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} -o .
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.inputs.package-name }}-macos${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}.tar.xz
+          path: ${{ github.event.inputs.package-name }}-*.tar.xz
