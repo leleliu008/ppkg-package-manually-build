@@ -26,8 +26,6 @@ on:
         options:
           - release
           - debug
-        required: true
-        default: release
 
       link-type:
         description: choose a link type
@@ -36,8 +34,6 @@ on:
           - static-prefered
           - shared-prefered
           - shared-only
-        required: true
-        default: static-only
 
       log-level:
         description: choose a log-level
