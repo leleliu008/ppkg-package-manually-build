@@ -54,8 +54,8 @@ jobs:
       - run: chmod a+x xcpkg
       - run: ./xcpkg setup
       - run: ./xcpkg update
-      - run: ./xcpkg install MacOSX/${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
-      - run: ./xcpkg pack    MacOSX/${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} -o .
+      - run: ./xcpkg install ${{ github.event.inputs.package-name }}:MacOSX:${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+      - run: ./xcpkg pack    ${{ github.event.inputs.package-name }}:MacOSX:${{ github.event.inputs.target-version }}/${{ github.event.inputs.target-arch }} -o .
 
       - uses: actions/upload-artifact@v3
         with:
