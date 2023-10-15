@@ -45,6 +45,7 @@ jobs:
     runs-on: macos-13
 
     steps:
+      - run: brew install vagrant
       - uses: leleliu008/github-actions-vagrant@main
         with:
           mem: 4096
