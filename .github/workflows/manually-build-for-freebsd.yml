@@ -42,14 +42,13 @@ on:
 jobs:
   build:
 
-    runs-on: macos-13
+    runs-on: macos-12
 
     steps:
-      - run: brew install vagrant
       - uses: leleliu008/github-actions-vagrant@main
         with:
           mem: 4096
-          box: generic/freebsd13
+          box: roboxes/freebsd13
           run: |
             export HOME=/home/vagrant
 
