@@ -31,9 +31,9 @@ on:
         description: choose a link type
         type: choice
         options:
-          - static-prefered
-          - shared-prefered
-          - shared-only
+          - static-most
+          - shared-most
+          - shared-full
 
       log-level:
         description: choose a log-level

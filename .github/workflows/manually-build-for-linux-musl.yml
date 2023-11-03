@@ -29,10 +29,10 @@ on:
         description: choose a link type
         type: choice
         options:
-          - static-only
-          - static-prefered
-          - shared-only
-          - shared-prefered
+          - static-full
+          - static-most
+          - shared-full
+          - shared-most
 
       log-level:
         description: choose a log-level
