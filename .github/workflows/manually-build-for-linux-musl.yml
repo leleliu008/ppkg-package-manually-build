@@ -104,4 +104,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.package-name }}---linux-${{ github.event.inputs.target-arch }}.tar.xz
-          path: ${{ github.event.inputs.package-name }}-*-linux-${{ github.event.inputs.target-arch }}*.tar.xz
+          path: ${{ github.event.inputs.package-name }}-*-linux*${{ github.event.inputs.target-arch }}.tar.xz
