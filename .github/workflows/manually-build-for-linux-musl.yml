@@ -74,7 +74,8 @@ jobs:
 
           run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
-          run ./ppkg setup
+
+          run ./ppkg setup --use-system-package-manager
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
           run ./ppkg pack    ${{ github.event.inputs.package-name }} -o .
