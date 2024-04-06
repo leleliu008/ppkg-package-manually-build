@@ -1,0 +1,79 @@
+name: manually build package for FreeBSD/NetBSD/OpenBSD
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      # https://ftp.netbsd.org/pub/NetBSD/
+      # https://cdn.openbsd.org/pub/OpenBSD/
+      # https://archive.freebsd.org/old-releases/amd64/
+      target:
+        description: choose a target to be built for
+        type: choice
+        options:
+          - freebsd-13.2-amd64
+          - freebsd-13.1-amd64
+          - freebsd-13.0-amd64
+          - openbsd-7.4-amd64
+          - openbsd-7.3-amd64
+          - netbsd-9.3-amd64
+          - netbsd-9.2-amd64
+          - netbsd-9.1-amd64
+
+      build-type:
+        description: choose a build type
+        type: choice
+        options:
+          - release
+          - debug
+
+      link-type:
+        description: choose a link type
+        type: choice
+        options:
+          - static-full
+          - static-most
+          - shared-full
+          - shared-most
+
+      pack-type:
+        description: choose a pack type
+        type: choice
+        options:
+          - tar.xz
+          - tar.lz
+          - tar.gz
+          - tar.bz2
+          - zip
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-vv'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
+
+      - run: ./ppkg setup
+      - run: ./ppkg update
+      - run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+      - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }} -o .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
+          path: ${{ github.event.inputs.package-name }}-*-${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
