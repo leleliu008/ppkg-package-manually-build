@@ -14,21 +14,12 @@ on:
         options:
           - amd64
 
-      build-type:
-        description: choose a build type
+      profile:
+        description: choose a build profile
         type: choice
         options:
           - release
           - debug
-
-      link-type:
-        description: choose a link type
-        type: choice
-        options:
-          - static-full
-          - static-most
-          - shared-full
-          - shared-most
 
       log-level:
         description: choose a log-level
@@ -65,11 +56,13 @@ jobs:
 
             run sudo pkgin -y update
             run sudo pkgin -y install llvm
+
             run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
             run chmod a+x ppkg
+
             run ./ppkg setup
             run ./ppkg update
-            run ./ppkg install ${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
+            run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
             run ./ppkg pack    ${{ github.event.inputs.package-name }} -o /home/vagrant/.ppkg/packed/
 
       - run: scp -i $VAGRANT_CWD/.vagrant/machines/default/virtualbox/private_key -o StrictHostKeyChecking=no -r -P 2222 vagrant@127.0.0.1:/home/vagrant/.ppkg/packed/${{ github.event.inputs.package-name }}-*-netbsd-amd64.tar.xz .

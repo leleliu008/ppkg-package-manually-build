@@ -22,6 +22,7 @@ on:
         description: choose a os would be built on
         type: choice
         options:
+          - ubuntu:24.04
           - ubuntu:23.10
           - ubuntu:23.04
           - ubuntu:22.10
@@ -31,21 +32,12 @@ on:
           - ubuntu:18.10
           - ubuntu:18.04
 
-      build-type:
-        description: choose a build type
+      profile:
+        description: choose a build profile
         type: choice
         options:
           - release
           - debug
-
-      link-type:
-        description: choose a link type
-        type: choice
-        options:
-          - static-full
-          - static-most
-          - shared-full
-          - shared-most
 
       log-level:
         description: choose a log-level
@@ -55,6 +47,16 @@ on:
           - '-q'
           - '-v'
           - '-vv'
+
+      pack-type:
+        description: choose a pack type
+        type: choice
+        options:
+          - tar.xz
+          - tar.lz
+          - tar.gz
+          - tar.bz2
+          - zip
 
 jobs:
   build:
@@ -91,10 +93,11 @@ jobs:
 
           run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
+
           run ./ppkg setup
           run ./ppkg update
-          run ./ppkg install ${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
-          run ./ppkg pack    ${{ github.event.inputs.package-name }} -o .
+          run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
+          run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
           EOF
 
           chmod +x run.sh

@@ -24,21 +24,12 @@ on:
           - netbsd-9.2-amd64
           - netbsd-9.1-amd64
 
-      build-type:
-        description: choose a build type
+      profile:
+        description: choose a build profile
         type: choice
         options:
           - release
           - debug
-
-      link-type:
-        description: choose a link type
-        type: choice
-        options:
-          - static-full
-          - static-most
-          - shared-full
-          - shared-most
 
       pack-type:
         description: choose a pack type
@@ -59,6 +50,11 @@ on:
           - '-v'
           - '-vv'
 
+      fsle:
+        description: create fully statically linked executables
+        type: boolean
+        default: false
+
 jobs:
   build:
 
@@ -70,8 +66,14 @@ jobs:
 
       - run: ./ppkg setup
       - run: ./ppkg update
-      - run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
-      - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }} -o .
+
+      - if: ${{ github.event.inputs.fsle == 'true' }}
+        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --fsle
+
+      - if: ${{ github.event.inputs.fsle == 'false' }}
+        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
+
+      - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
 
       - uses: actions/upload-artifact@v4
         with:

@@ -20,20 +20,12 @@ on:
           - x86_64
           - arm64
 
-      build-type:
-        description: choose a build type
+      profile:
+        description: choose a build profile
         type: choice
         options:
           - release
           - debug
-
-      link-type:
-        description: choose a link type
-        type: choice
-        options:
-          - static-most
-          - shared-most
-          - shared-full
 
       log-level:
         description: choose a log-level
@@ -43,6 +35,16 @@ on:
           - '-q'
           - '-v'
           - '-vv'
+
+      pack-type:
+        description: choose a pack type
+        type: choice
+        options:
+          - tar.xz
+          - tar.lz
+          - tar.gz
+          - tar.bz2
+          - zip
 
 jobs:
   build:
@@ -55,8 +57,8 @@ jobs:
 
       - run: ./ppkg setup
       - run: ./ppkg update
-      - run: ./ppkg install macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --link-type=${{ github.event.inputs.link-type }} ${{ github.event.inputs.log-level }}
-      - run: ./ppkg pack    macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} -o .
+      - run: ./ppkg install macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
+      - run: ./ppkg pack    macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
 
       - uses: actions/upload-artifact@v4
         with:
