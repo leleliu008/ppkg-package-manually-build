@@ -50,7 +50,7 @@ on:
           - '-v'
           - '-x'
 
-      fsle:
+      static:
         description: create fully statically linked executables
         type: boolean
         default: false
@@ -67,10 +67,10 @@ jobs:
       - run: ./ppkg setup
       - run: ./ppkg update
 
-      - if: ${{ github.event.inputs.fsle == 'true' }}
-        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --fsle
+      - if: ${{ github.event.inputs.static == 'true' }}
+        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --static
 
-      - if: ${{ github.event.inputs.fsle == 'false' }}
+      - if: ${{ github.event.inputs.static == 'false' }}
         run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
 
       - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
