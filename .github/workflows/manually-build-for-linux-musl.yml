@@ -81,7 +81,7 @@ jobs:
           run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
 
-          run ./ppkg setup --syspm
+          run ./ppkg setup
           run ./ppkg update
 
           if [ ${{ github.event.inputs.fsle }} = true ] ; then
