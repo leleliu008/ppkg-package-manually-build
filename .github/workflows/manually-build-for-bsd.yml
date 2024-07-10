@@ -48,7 +48,7 @@ on:
           - ''
           - '-q'
           - '-v'
-          - '-vv'
+          - '-x'
 
       fsle:
         description: create fully statically linked executables

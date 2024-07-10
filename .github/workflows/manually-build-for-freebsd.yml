@@ -28,7 +28,7 @@ on:
           - ''
           - '-q'
           - '-v'
-          - '-vv'
+          - '-x'
 
       pack-type:
         description: choose a pack type
