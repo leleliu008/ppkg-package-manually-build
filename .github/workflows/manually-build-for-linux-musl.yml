@@ -58,7 +58,7 @@ jobs:
       - name: create run.sh
         run: |
           cat > run.sh <<EOF
-          set -e
+          set -ex
 
           COLOR_GREEN='\033[0;32m'        # Green
           COLOR_PURPLE='\033[0;35m'       # Purple
