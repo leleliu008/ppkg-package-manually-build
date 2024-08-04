@@ -103,6 +103,9 @@ jobs:
             run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
             run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
 
+      - run: pwd
+      - run: ls
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.package-name }}---freebsd-amd64.tar.xz
