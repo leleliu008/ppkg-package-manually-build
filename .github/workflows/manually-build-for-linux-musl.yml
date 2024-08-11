@@ -81,13 +81,10 @@ jobs:
 
           run uname -a
 
-          run apk update
-          run apk add g++ libc-dev linux-headers
-
           run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
 
-          run ./ppkg setup
+          run ./ppkg setup --syspm
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
           run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
@@ -98,7 +95,7 @@ jobs:
       - name: execute run.sh in the docker container
         run: |
           case ${{ github.event.inputs.target-arch }} in
-            x86_64)  IMAGE='alpine:3.18'    ;;
+            x86_64)  IMAGE='alpine:3.19'    ;;
             aarch64) IMAGE='arm64v8/alpine' ;;
             ppc64le) IMAGE='ppc64le/alpine' ;;
             riscv64) IMAGE='riscv64/alpine:edge' ;;
