@@ -88,7 +88,7 @@ jobs:
       target-platform-vers: ${{ steps.prepare.outputs.TARGET_PLATFORM_VERS }}
 
   cross:
-    if : ${{ github.event.inputs.cross-compiling }}
+    if : ${{ github.event.inputs.cross-compiling == 'true' }}
 
     runs-on: ubuntu-latest
 
@@ -113,7 +113,7 @@ jobs:
           path: ${{ github.event.inputs.package-name }}-*-${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
 
   native:
-    if : ${{ github.event.inputs.cross-compiling }}
+    if : ${{ github.event.inputs.cross-compiling != 'true' }}
 
     needs: base
 
