@@ -61,8 +61,34 @@ on:
         type: boolean
         default: false
 
+
+      cross-compiling:
+        description: whether to do cross compiling
+        type: boolean
+        default: false
+
 jobs:
-  build:
+
+  base:
+    if : ${{ github.event.inputs.cross-compiling != 'true' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - id:  prepare
+        run: |
+          TARGET_PLATFORM_NAME="$(printf '%s\n' ${{ github.event.inputs.target }} | cut -d- -f1)"
+          TARGET_PLATFORM_VERS="$(printf '%s\n' ${{ github.event.inputs.target }} | cut -d- -f2)"
+
+          printf 'TARGET_PLATFORM_NAME=%s\n' "$TARGET_PLATFORM_NAME" >> "$GITHUB_OUTPUT"
+          printf 'TARGET_PLATFORM_VERS=%s\n' "$TARGET_PLATFORM_VERS" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      target-platform-name: ${{ steps.prepare.outputs.TARGET_PLATFORM_NAME }}
+      target-platform-vers: ${{ steps.prepare.outputs.TARGET_PLATFORM_VERS }}
+
+  cross:
+    if : ${{ github.event.inputs.cross-compiling }}
 
     runs-on: ubuntu-latest
 
@@ -80,6 +106,49 @@ jobs:
         run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
 
       - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
+          path: ${{ github.event.inputs.package-name }}-*-${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
+
+  native:
+    if : ${{ github.event.inputs.cross-compiling }}
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: curl -LO https://curl.se/ca/cacert.pem
+
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
+
+      - uses: cross-platform-actions/action@v0.25.0
+        with:
+          operating_system: ${{ needs.base.outputs.target-platform-name }}
+          version: ${{ needs.base.outputs.target-platform-vers }}
+          shell: bash
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            run export SSL_CERT_FILE="$PWD/cacert.pem"
+
+            run ./ppkg setup --syspm
+            run ./ppkg update
+
+            if [ '${{ github.event.inputs.static }}' = 'true' ] ; then
+              OPT=--static
+            else
+              OPT=
+            fi
+
+            run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --static
+            run ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
 
       - uses: actions/upload-artifact@v4
         with:
