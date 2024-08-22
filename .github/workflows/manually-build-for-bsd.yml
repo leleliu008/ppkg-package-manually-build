@@ -63,7 +63,7 @@ on:
 
 
       cross-compiling:
-        description: whether to do cross compiling
+        description: cross compiling
         type: boolean
         default: false
 
@@ -147,7 +147,7 @@ jobs:
               OPT=
             fi
 
-            run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --static
+            run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} "$OPT"
             run ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
 
       - uses: actions/upload-artifact@v4
