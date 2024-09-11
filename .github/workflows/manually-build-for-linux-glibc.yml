@@ -123,5 +123,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}.tar.xz
-          path: ${{ github.event.inputs.package-name }}*.tar.xz
+          name: ${{ github.event.inputs.package-name }}.${{ github.event.inputs.pack-type }}
+          path: ${{ github.event.inputs.package-name }}*.${{ github.event.inputs.pack-type }}

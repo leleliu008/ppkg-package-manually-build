@@ -108,5 +108,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---freebsd-amd64.tar.xz
-          path: ${{ github.event.inputs.package-name }}-*-freebsd-amd64.tar.xz
+          name: ${{ github.event.inputs.package-name }}---freebsd-amd64.${{ github.event.inputs.pack-type }}
+          path: ${{ github.event.inputs.package-name }}-*-freebsd-amd64.${{ github.event.inputs.pack-type }}
