@@ -81,6 +81,8 @@ jobs:
 
           run uname -a
 
+          export GITHUB_ACTIONS=true
+
           run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
 

@@ -84,6 +84,8 @@ jobs:
 
           run uname -a
 
+          export GITHUB_ACTIONS=true
+
           case ${{ github.event.inputs.build-onos }} in
             ubuntu:*)
               run apt -y update
