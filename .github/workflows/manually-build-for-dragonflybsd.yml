@@ -1,0 +1,98 @@
+name: manually build package for dragonflybsd
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      target-arch:
+        description: choose a target arch to be built for
+        type: choice
+        options:
+          - x86_64
+
+      dragonflybsd-version:
+        description: choose a dragonflybsd version to be built with
+        type: choice
+        options:
+          - '6.4'
+
+      profile:
+        description: choose a build profile
+        type: choice
+        options:
+          - release
+          - debug
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-x'
+
+      pack-type:
+        description: choose a pack type
+        type: choice
+        options:
+          - tar.xz
+          - tar.lz
+          - tar.gz
+          - tar.bz2
+          - zip
+
+      static:
+        description: create fully statically linked executables
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: vmactions/dragonflybsd-vm@v1
+        with:
+          release: "${{ github.event.inputs.dragonflybsd-version }}.0"
+          usesh: true
+          sync: rsync
+          copyback: true
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+
+            run pkg update
+            run pkg install -y gcc curl libnghttp2
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+
+            run ./ppkg setup --syspm
+            run ./ppkg update
+
+            if [ ${{ github.event.inputs.static }} = true ] ; then
+              FSLE=--static
+            else
+              FSLE=
+            fi
+
+            run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
+            run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+
+      - run: pwd
+      - run: ls
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.package-name }}---dragonflybsd-x86_64.${{ github.event.inputs.pack-type }}
+          path: ${{ github.event.inputs.package-name }}-*-dragonflybsd-x86_64.${{ github.event.inputs.pack-type }}
