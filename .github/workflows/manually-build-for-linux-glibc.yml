@@ -60,6 +60,11 @@ on:
           - tar.bz2
           - zip
 
+      static:
+        description: create fully statically linked executables
+        type: boolean
+        default: false
+
 jobs:
   build:
 
@@ -68,6 +73,12 @@ jobs:
     steps:
       - name: create run.sh
         run: |
+          if [ ${{ github.event.inputs.static }} = true ] ; then
+            FSLE=--static
+          else
+            FSLE=
+          fi
+
           cat > run.sh <<EOF
           set -e
 
@@ -100,7 +111,7 @@ jobs:
 
           run ./ppkg setup
           run ./ppkg update
-          run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
+          run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
           run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
           EOF
 
