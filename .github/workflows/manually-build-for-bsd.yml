@@ -110,7 +110,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
-          path: ${{ github.event.inputs.package-name }}-*-${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
+          path: '*.${{ github.event.inputs.pack-type }}'
 
   native:
     if : ${{ github.event.inputs.cross-compiling != 'true' }}
@@ -153,4 +153,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
-          path: ${{ github.event.inputs.package-name }}-*-${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
+          path: '*.${{ github.event.inputs.pack-type }}'

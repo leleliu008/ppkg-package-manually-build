@@ -63,4 +63,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.package-name }}-macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.pack-type }}
-          path: ${{ github.event.inputs.package-name }}-*.${{ github.event.inputs.pack-type }}
+          path: '*.${{ github.event.inputs.pack-type }}'
