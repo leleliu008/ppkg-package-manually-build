@@ -140,5 +140,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}.${{ github.event.inputs.pack-type }}
+          name: ${{ github.event.inputs.package-name }}---linux-glibc-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}.${{ github.event.inputs.pack-type }}
           path: '*.${{ github.event.inputs.pack-type }}'
