@@ -16,6 +16,7 @@ on:
           - aarch64
           - ppc64le
           - riscv64
+          - loongarch64
           - s390x
 
       profile:
@@ -61,6 +62,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
+
       - name: create run.sh
         run: |
           if [ ${{ github.event.inputs.static }} = true ] ; then
@@ -96,35 +100,16 @@ jobs:
 
           export GITHUB_ACTIONS=true
 
-          run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
-          run chmod a+x ppkg
-
           run ./ppkg setup --syspm
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
           run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE
           EOF
 
-          chmod +x run.sh
-
-      - name: execute run.sh in the docker container
-        run: |
-          case ${{ github.event.inputs.target-arch }} in
-            x86_64)  IMAGE='alpine:3.19'    ;;
-            aarch64) IMAGE='arm64v8/alpine' ;;
-            ppc64le) IMAGE='ppc64le/alpine' ;;
-            riscv64) IMAGE='riscv64/alpine:edge' ;;
-            s390x)   IMAGE='s390x/alpine'   ;;
-          esac
-
-          if [ '${{ github.event.inputs.target-arch }}' != 'x86_64' ] ; then
-            # https://github.com/multiarch/qemu-user-static
-            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          fi
-
-          docker run -v $PWD:$PWD -w $PWD --name alpine "$IMAGE" sh run.sh
-
-      - run: ls
+      - run: curl -LO https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/master/alpine-chroot-install
+      - run: chmod +x alpine-chroot-install
+      - run: sudo ./alpine-chroot-install -d /alpine -a ${{ github.event.inputs.target-arch }}
+      - run: /alpine/enter-chroot sh run.sh
 
       - uses: actions/upload-artifact@v4
         with:
