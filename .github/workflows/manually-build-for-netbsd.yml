@@ -63,11 +63,11 @@ jobs:
             run ./ppkg setup
             run ./ppkg update
             run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
-            run ./ppkg pack    ${{ github.event.inputs.package-name }} -o /home/vagrant/.ppkg/packed/
+            run ./ppkg bundle  ${{ github.event.inputs.package-name }} /home/vagrant/.ppkg/packed/${{ github.event.inputs.bundle-type }}
 
       - run: scp -i $VAGRANT_CWD/.vagrant/machines/default/virtualbox/private_key -o StrictHostKeyChecking=no -r -P 2222 vagrant@127.0.0.1:/home/vagrant/.ppkg/packed/${{ github.event.inputs.package-name }}-*-netbsd-amd64.tar.xz .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---netbsd-amd64.${{ github.event.inputs.pack-type }}
-          path: '*.${{ github.event.inputs.pack-type }}'
+          name: ${{ github.event.inputs.package-name }}---netbsd-amd64${{ github.event.inputs.bundle-type }}
+          path: '*${{ github.event.inputs.bundle-type }}'

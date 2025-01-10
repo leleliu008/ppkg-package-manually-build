@@ -36,15 +36,15 @@ on:
           - '-v'
           - '-x'
 
-      pack-type:
+      bundle-type:
         description: choose a pack type
         type: choice
         options:
-          - tar.xz
-          - tar.lz
-          - tar.gz
-          - tar.bz2
-          - zip
+          - .tar.xz
+          - .tar.lz
+          - .tar.gz
+          - .tar.bz2
+          - .zip
 
       static:
         description: create fully statically linked executables
@@ -87,12 +87,12 @@ jobs:
             fi
 
             run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
-            run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+            run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
       - run: pwd
       - run: ls
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---dragonflybsd-x86_64.${{ github.event.inputs.pack-type }}
-          path: '*.${{ github.event.inputs.pack-type }}'
+          name: ${{ github.event.inputs.package-name }}---dragonflybsd-x86_64.${{ github.event.inputs.bundle-type }}
+          path: '*${{ github.event.inputs.bundle-type }}'

@@ -15,12 +15,16 @@ on:
         description: choose a target to be built for
         type: choice
         options:
+          - freebsd-14.2-amd64
           - freebsd-14.1-amd64
           - freebsd-14.0-amd64
+          - freebsd-13.4-amd64
+          - freebsd-13.3-amd64
           - freebsd-13.2-amd64
           - freebsd-13.2-amd64
           - freebsd-13.1-amd64
           - freebsd-13.0-amd64
+          - openbsd-7.6-amd64
           - openbsd-7.5-amd64
           - openbsd-7.4-amd64
           - openbsd-7.3-amd64
@@ -37,15 +41,15 @@ on:
           - release
           - debug
 
-      pack-type:
+      bundle-type:
         description: choose a pack type
         type: choice
         options:
-          - tar.xz
-          - tar.lz
-          - tar.gz
-          - tar.bz2
-          - zip
+          - .tar.xz
+          - .tar.lz
+          - .tar.gz
+          - .tar.bz2
+          - .zip
 
       log-level:
         description: choose a log-level
@@ -105,12 +109,12 @@ jobs:
       - if: ${{ github.event.inputs.static == 'false' }}
         run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
 
-      - run: ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+      - run: ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
-          path: '*.${{ github.event.inputs.pack-type }}'
+          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.bundle-type }}
+          path: '*${{ github.event.inputs.bundle-type }}'
 
   native:
     if : ${{ github.event.inputs.cross-compiling != 'true' }}
@@ -148,9 +152,9 @@ jobs:
             fi
 
             run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} "$OPT"
-            run ./ppkg pack    ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+            run ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.pack-type }}
-          path: '*.${{ github.event.inputs.pack-type }}'
+          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.bundle-type }}
+          path: '*${{ github.event.inputs.bundle-type }}'

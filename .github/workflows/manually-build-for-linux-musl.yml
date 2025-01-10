@@ -34,20 +34,26 @@ on:
           - '-v'
           - '-x'
 
-      pack-type:
-        description: choose a pack type
+      bundle-type:
+        description: choose a bundle type
         type: choice
         options:
-          - tar.xz
-          - tar.lz
-          - tar.gz
-          - tar.bz2
-          - zip
+          - .tar.xz
+          - .tar.lz
+          - .tar.gz
+          - .tar.bz2
+          - .zip
 
       static:
         description: create fully statically linked executables
         type: boolean
         default: false
+
+      portable:
+        description: bundle all needed libraries into the archive
+        type: boolean
+        default: false
+
 
 jobs:
   build:
@@ -62,6 +68,13 @@ jobs:
           else
             FSLE=
           fi
+
+          if [ ${{ github.event.inputs.portable }} = true ] ; then
+            PORTABLE=--portable
+          else
+            PORTABLE=
+          fi
+
 
           cat > run.sh <<EOF
           set -e
@@ -89,7 +102,7 @@ jobs:
           run ./ppkg setup --syspm
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
-          run ./ppkg pack    ${{ github.event.inputs.package-name }} -t ${{ github.event.inputs.pack-type }}
+          run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE
           EOF
 
           chmod +x run.sh
@@ -115,5 +128,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---linux-musl-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}.${{ github.event.inputs.pack-type }}
-          path: '*.${{ github.event.inputs.pack-type }}'
+          name: ${{ github.event.inputs.package-name }}---linux-musl-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}.${{ github.event.inputs.bundle-type }}
+          path: '*${{ github.event.inputs.bundle-type }}'
