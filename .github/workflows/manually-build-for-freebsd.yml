@@ -110,5 +110,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---freebsd-amd64.${{ github.event.inputs.bundle-type }}
+          name: ${{ github.event.inputs.package-name }}---freebsd-amd64.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
           path: '*${{ github.event.inputs.bundle-type }}'

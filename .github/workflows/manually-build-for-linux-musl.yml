@@ -113,5 +113,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.package-name }}---linux-musl-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}.${{ github.event.inputs.bundle-type }}
+          name: ${{ github.event.inputs.package-name }}---linux-musl-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
           path: '*${{ github.event.inputs.bundle-type }}'
