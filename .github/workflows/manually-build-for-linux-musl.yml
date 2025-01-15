@@ -55,6 +55,16 @@ on:
         type: boolean
         default: false
 
+      publish:
+        description: publish as GitHub release
+        type: boolean
+        default: false
+
+      tagname:
+        description: GitHub release tagname
+        required: false
+
+
 
 jobs:
   build:
@@ -115,3 +125,37 @@ jobs:
         with:
           name: ${{ github.event.inputs.package-name }}---linux-musl-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
           path: '*${{ github.event.inputs.bundle-type }}'
+
+
+  publish:
+    needs: build
+    if: github.event.inputs.publish == 'true'
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          path: .
+          merge-multiple: true
+
+      - run: ls -a
+
+      # to avaid: failed to run git: fatal: not a git repository (or any of the parent directories): .git
+      - run: git -c init.defaultBranch=master init
+      - run: git remote add origin ${{ github.repositoryUrl }}
+
+      - run: sha256sum *${{ github.event.inputs.bundle-type }} > notes.md
+
+      - run: |
+          if [ -z "${{ github.event.inputs.tagname }}" ] ; then
+            TAGNAME="$(ls *${{ github.event.inputs.bundle-type }})"
+          else
+            TAGNAME=${{ github.event.inputs.tagname }}
+          fi
+
+          gh release create "$TAGNAME" *${{ github.event.inputs.bundle-type }} --title "$TAGNAME" --notes-file notes.md
