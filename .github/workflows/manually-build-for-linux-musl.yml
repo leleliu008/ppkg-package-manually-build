@@ -1,5 +1,8 @@
 name: manually build package for linux-musl
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:

@@ -1,5 +1,8 @@
 name: manually build package for dragonflybsd
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
