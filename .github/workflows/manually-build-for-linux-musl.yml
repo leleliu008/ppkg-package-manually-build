@@ -49,9 +49,9 @@ on:
           - .zip
 
       syspm:
-        description: use system package manager rather than uppm
+        description: use system package manager instaed of uppm
         type: boolean
-        default: true
+        default: false
 
       static:
         description: create fully statically linked executables
