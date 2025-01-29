@@ -124,6 +124,9 @@ jobs:
 
           export GITHUB_ACTIONS=true
 
+          run apk update
+          run apk add g++ libc-dev linux-headers
+
           run ./ppkg setup $SYSPM
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
