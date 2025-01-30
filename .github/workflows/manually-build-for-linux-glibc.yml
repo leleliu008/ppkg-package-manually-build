@@ -85,9 +85,32 @@ on:
 
 
 jobs:
-  build:
+
+  base:
 
     runs-on: ubuntu-latest
+
+    steps:
+      - id:  prepare
+        run: |
+          if [ ${{ github.event.inputs.target-arch }} = aarch64 ] ; then
+            RUNNER=ubuntu-24.04-arm
+          else
+            RUNNER=ubuntu-latest
+          fi
+
+          printf 'RUNNER=%s\n' "$RUNNER" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      runner: ${{ steps.prepare.outputs.RUNNER }}
+
+
+  build:
+
+    needs: base
+
+    runs-on: ${{ needs.base.outputs.runner }}
+
 
     steps:
       - name: create run.sh
@@ -159,10 +182,12 @@ jobs:
             s390x)   IMAGE='s390x/${{ github.event.inputs.build-onos }}'   ;;
           esac
 
-          if [ '${{ github.event.inputs.target-arch }}' != 'x86_64' ] ; then
-            # https://github.com/multiarch/qemu-user-static
-            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          fi
+          case ${{ github.event.inputs.target-arch }} in
+            x86_64|aarch64) ;;
+            *)
+              # https://github.com/multiarch/qemu-user-static
+              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          esac
 
           docker run -v $PWD:$PWD -w $PWD "$IMAGE" sh run.sh
 

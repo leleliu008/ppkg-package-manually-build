@@ -75,9 +75,32 @@ on:
 
 
 jobs:
-  build:
+
+  base:
 
     runs-on: ubuntu-latest
+
+    steps:
+      - id:  prepare
+        run: |
+          if [ ${{ github.event.inputs.target-arch }} = aarch64 ] ; then
+            RUNNER=ubuntu-24.04-arm
+          else
+            RUNNER=ubuntu-latest
+          fi
+
+          printf 'RUNNER=%s\n' "$RUNNER" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      runner: ${{ steps.prepare.outputs.RUNNER }}
+
+
+
+  build:
+
+    needs: base
+
+    runs-on: ${{ needs.base.outputs.runner }}
 
     steps:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
