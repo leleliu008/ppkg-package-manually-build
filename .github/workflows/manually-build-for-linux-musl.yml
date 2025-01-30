@@ -161,9 +161,8 @@ jobs:
       # https://github.com/alpinelinux/alpine-chroot-install/issues/46
       - run: |
           if [ ${{ github.event.inputs.target-arch }} = aarch64 ] ; then
-          cat >> $GITHUB_ENV <<EOF
-          APK_TOOLS_URI=https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.7/aarch64/apk.static
-          APK_TOOLS_SHA256=27a975638ddc95a411c9f17c63383e335da9edf6bb7de2281d950c291a11f878
+            sed -i '/APK_TOOLS_URI:=/s|x86_64|aarch64|' alpine-chroot-install
+            sed -i 's|bdd044e0fd6cc388c5e571e1093efa5f35f7767cc5aa338b0a2576a429009a62|27a975638ddc95a411c9f17c63383e335da9edf6bb7de2281d950c291a11f878' alpine-chroot-install
           EOF
           fi
 
