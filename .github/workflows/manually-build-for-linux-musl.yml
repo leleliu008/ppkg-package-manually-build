@@ -163,7 +163,6 @@ jobs:
           if [ ${{ github.event.inputs.target-arch }} = aarch64 ] ; then
             sed -i '/APK_TOOLS_URI:=/s|x86_64|aarch64|' alpine-chroot-install
             sed -i 's|bdd044e0fd6cc388c5e571e1093efa5f35f7767cc5aa338b0a2576a429009a62|27a975638ddc95a411c9f17c63383e335da9edf6bb7de2281d950c291a11f878|' alpine-chroot-install
-          EOF
           fi
 
       - run: sudo ./alpine-chroot-install -d /alpine -a ${{ github.event.inputs.target-arch }}
