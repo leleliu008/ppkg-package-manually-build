@@ -63,6 +63,11 @@ on:
           - .tar.bz2
           - .zip
 
+      syspm:
+        description: use system package manager instaed of uppm
+        type: boolean
+        default: false
+
       static:
         description: create fully statically linked executables
         type: boolean
@@ -103,6 +108,12 @@ jobs:
             PORTABLE=
           fi
 
+          if [ ${{ github.event.inputs.syspm }} = true ] ; then
+            SYSPM=--syspm
+          else
+            SYSPM=
+          fi
+
 
           cat > run.sh <<EOF
           set -e
@@ -134,7 +145,7 @@ jobs:
           run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
 
-          run ./ppkg setup
+          run ./ppkg setup $SYSPM
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
           run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE

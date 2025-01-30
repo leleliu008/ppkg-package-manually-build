@@ -31,6 +31,7 @@ on:
           - openbsd-7.5-amd64
           - openbsd-7.4-amd64
           - openbsd-7.3-amd64
+          - netbsd-10.1-amd64
           - netbsd-10.0-amd64
           - netbsd-9.4-amd64
           - netbsd-9.3-amd64
@@ -63,11 +64,15 @@ on:
           - '-v'
           - '-x'
 
+      syspm:
+        description: use system package manager instaed of uppm
+        type: boolean
+        default: false
+
       static:
         description: create fully statically linked executables
         type: boolean
         default: false
-
 
       cross-compiling:
         description: cross compiling
@@ -90,9 +95,28 @@ jobs:
           printf 'TARGET_PLATFORM_NAME=%s\n' "$TARGET_PLATFORM_NAME" >> "$GITHUB_OUTPUT"
           printf 'TARGET_PLATFORM_VERS=%s\n' "$TARGET_PLATFORM_VERS" >> "$GITHUB_OUTPUT"
 
+          if [ ${{ github.event.inputs.syspm }} = true ] ; then
+            SYSPM=--syspm
+          else
+            SYSPM=
+          fi
+
+          if [ ${{ github.event.inputs.static }} = true ] ; then
+            STATIC=--static
+          else
+            STATIC=
+          fi
+
+          printf 'SYSPM=%s\n' "$SYSPM" >> "$GITHUB_OUTPUT"
+          printf 'STATIC=%s\n' "$STATIC" >> "$GITHUB_OUTPUT"
+
+
     outputs:
       target-platform-name: ${{ steps.prepare.outputs.TARGET_PLATFORM_NAME }}
       target-platform-vers: ${{ steps.prepare.outputs.TARGET_PLATFORM_VERS }}
+      syspm: ${{ steps.prepare.outputs.SYSPM }}
+      static: ${{ steps.prepare.outputs.STATIC }}
+
 
   cross:
     if : ${{ github.event.inputs.cross-compiling == 'true' }}
@@ -103,14 +127,10 @@ jobs:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
-      - run: ./ppkg setup
+      - run: ./ppkg setup ${{ needs.base.outputs.syspm }}
       - run: ./ppkg update
 
-      - if: ${{ github.event.inputs.static == 'true' }}
-        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} --static
-
-      - if: ${{ github.event.inputs.static == 'false' }}
-        run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
+      - run: ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} ${{ needs.base.outputs.static }}
 
       - run: ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
@@ -134,7 +154,7 @@ jobs:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
-      - uses: cross-platform-actions/action@v0.25.0
+      - uses: cross-platform-actions/action@v0.27.0
         with:
           operating_system: ${{ needs.base.outputs.target-platform-name }}
           version: ${{ needs.base.outputs.target-platform-vers }}
@@ -147,16 +167,9 @@ jobs:
 
             run export SSL_CERT_FILE="$PWD/cacert.pem"
 
-            run ./ppkg setup --syspm
+            run ./ppkg setup ${{ needs.base.outputs.syspm }}
             run ./ppkg update
-
-            if [ '${{ github.event.inputs.static }}' = 'true' ] ; then
-              OPT=--static
-            else
-              OPT=
-            fi
-
-            run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} "$OPT"
+            run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
       - uses: actions/upload-artifact@v4
