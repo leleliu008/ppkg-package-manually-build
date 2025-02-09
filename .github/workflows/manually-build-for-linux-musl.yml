@@ -50,6 +50,7 @@ on:
           - .tar.gz
           - .tar.bz2
           - .zip
+          - .AppImage
 
       syspm:
         description: use system package manager instaed of uppm
@@ -76,7 +77,6 @@ on:
         required: false
 
 
-
 jobs:
 
   base:
@@ -96,7 +96,6 @@ jobs:
 
     outputs:
       runner: ${{ steps.prepare.outputs.RUNNER }}
-
 
 
   build:
