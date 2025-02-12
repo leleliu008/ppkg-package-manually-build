@@ -168,6 +168,12 @@ jobs:
           run ./ppkg setup $SYSPM
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
+
+          if [ -f           ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo ] ; then
+            chown root:root ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo
+            chmod 4755      ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo
+          fi
+
           run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE
           EOF
 
