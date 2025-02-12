@@ -158,6 +158,12 @@ jobs:
           sed -i 's|systemd=true|systemd=false|' ~/.ppkg/repos.d/official-core/formula/appstream.yml
 
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
+
+          if [ -f ~/.ppkg/installed/linux-musl-x86_64/sudo-rs/bin/sudo ] ; then
+            chown root:root ~/.ppkg/installed/linux-musl-x86_64/sudo-rs/bin/sudo
+            chmod 4755      ~/.ppkg/installed/linux-musl-x86_64/sudo-rs/bin/sudo
+          fi
+
           run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE
           EOF
 
