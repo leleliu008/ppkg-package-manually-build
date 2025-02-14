@@ -22,8 +22,6 @@ on:
           - loongarch64
           - s390x
           - armhf
-          - armv7
-          - x86
 
       profile:
         description: choose a build profile
