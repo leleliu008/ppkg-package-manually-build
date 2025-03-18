@@ -152,9 +152,6 @@ jobs:
           run ./ppkg setup $SYSPM
           run ./ppkg update
 
-          sed -i '/^dep-pkg: /s|systemd||'       ~/.ppkg/repos.d/official-core/formula/appstream.yml
-          sed -i 's|systemd=true|systemd=false|' ~/.ppkg/repos.d/official-core/formula/appstream.yml
-
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
 
           if [ -f           ~/.ppkg/installed/linux-musl-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo ] ; then
