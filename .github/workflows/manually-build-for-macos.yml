@@ -14,7 +14,7 @@ on:
       target-version:
         description: input a target version to be built
         required: false
-        default: '14.0'
+        default: '15.0'
 
       target-arch:
         description: choose a target arch to be built for
@@ -40,7 +40,7 @@ on:
           - '-x'
 
       bundle-type:
-        description: choose a pack type
+        description: choose a bundle type
         type: choice
         options:
           - .tar.xz
@@ -60,15 +60,39 @@ on:
 
 
 jobs:
+
+  base:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - id:  prepare
+        run: |
+          if [ ${{ github.event.inputs.target-arch }} = arm64 ] ; then
+            RUNNER=macos-15
+          else
+            RUNNER=macos-13
+          fi
+
+          printf 'RUNNER=%s\n' "$RUNNER" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      runner: ${{ steps.prepare.outputs.RUNNER }}
+
+
   build:
 
-    runs-on: macos-14
+    needs: base
+
+    runs-on: ${{ needs.base.outputs.runner }}
 
     steps:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
+      - run: ./ppkg about
       - run: ./ppkg setup
+      - run: ./ppkg sysinfo
       - run: ./ppkg update
       - run: ./ppkg install macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
       - run: ./ppkg bundle  macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
