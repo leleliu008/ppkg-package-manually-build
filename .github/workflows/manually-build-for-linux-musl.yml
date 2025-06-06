@@ -147,7 +147,7 @@ jobs:
           export GITHUB_ACTIONS=true
 
           run apk update
-          run apk add g++ libc-dev linux-headers rust cargo llvm19 clang19-dev
+          run apk add g++ libc-dev linux-headers rust cargo llvm19 clang19 clang19-dev
 
           run ./ppkg setup $SYSPM
           run ./ppkg update
