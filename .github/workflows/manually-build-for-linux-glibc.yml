@@ -113,7 +113,6 @@ jobs:
 
     runs-on: ${{ needs.base.outputs.runner }}
 
-
     steps:
       - name: create run.sh
         run: |
@@ -156,25 +155,12 @@ jobs:
 
           export GITHUB_ACTIONS=true
 
-          case ${{ github.event.inputs.build-onos }} in
-            ubuntu:*)
-              run apt -y update
-              run apt -y install curl xz-utils g++
-              ;;
-          esac
-
           run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
           run chmod a+x ppkg
 
           run ./ppkg setup $SYSPM
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
-
-          if [ -f           ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo ] ; then
-            chown root:root ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo
-            chmod 4755      ~/.ppkg/installed/linux-glibc-${{ github.event.inputs.target-arch }}/sudo-rs/bin/sudo
-          fi
-
           run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }} $PORTABLE
           EOF
 
