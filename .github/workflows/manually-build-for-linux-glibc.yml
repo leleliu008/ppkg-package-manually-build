@@ -12,20 +12,21 @@ on:
         required: true
 
       target-arch:
-        description: choose a target arch to be built for
+        description: choose which target arch to be built for
         type: choice
         options:
           - x86_64
           - aarch64
-          - ppc64le
           - riscv64
+          - ppc64le
           - s390x
           - armhf
 
       build-onos:
-        description: choose a os would be built on
+        description: choose which os would be built on
         type: choice
         options:
+          - ubuntu:25.04
           - ubuntu:24.04
           - ubuntu:23.10
           - ubuntu:23.04
