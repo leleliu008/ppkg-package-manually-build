@@ -169,11 +169,11 @@ jobs:
       - name: execute run.sh in the docker container
         run: |
           case ${{ github.event.inputs.target-arch }} in
-            x86_64)  IMAGE='${{ github.event.inputs.build-onos }}'         ;;
-            aarch64) IMAGE='arm64v8/${{ github.event.inputs.build-onos }}' ;;
-            ppc64le) IMAGE='ppc64le/${{ github.event.inputs.build-onos }}' ;;
-            riscv64) IMAGE='riscv64/${{ github.event.inputs.build-onos }}' ;;
-            s390x)   IMAGE='s390x/${{ github.event.inputs.build-onos }}'   ;;
+            x86_64)  p='amd64'    ; IMAGE='${{ github.event.inputs.build-onos }}'         ;;
+            aarch64) p='arm64/v8' ; IMAGE='arm64v8/${{ github.event.inputs.build-onos }}' ;;
+            ppc64le) p='ppc64le'  ; IMAGE='ppc64le/${{ github.event.inputs.build-onos }}' ;;
+            riscv64) p='riscv64'  ; IMAGE='riscv64/${{ github.event.inputs.build-onos }}' ;;
+            s390x)   p='s390x'    ; IMAGE='s390x/${{ github.event.inputs.build-onos }}'   ;;
           esac
 
           case ${{ github.event.inputs.target-arch }} in
@@ -183,7 +183,7 @@ jobs:
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           esac
 
-          docker run -v $PWD:/root -w /root "$IMAGE" /bin/sh run.sh
+          docker run --platform linux/$p -v $PWD:/root -w /root "$IMAGE" /bin/sh run.sh
 
       - run: ls
 
