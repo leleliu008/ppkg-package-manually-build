@@ -114,6 +114,9 @@ jobs:
     runs-on: ${{ needs.base.outputs.runner }}
 
     steps:
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
+
       - name: create run.sh
         run: |
           if [ ${{ github.event.inputs.static }} = true ] ; then
@@ -155,9 +158,6 @@ jobs:
 
           export GITHUB_ACTIONS=true
 
-          run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
-          run chmod a+x ppkg
-
           run ./ppkg setup $SYSPM
           run ./ppkg update
           run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
@@ -183,7 +183,7 @@ jobs:
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           esac
 
-          docker run -v $PWD:$PWD -w $PWD "$IMAGE" sh run.sh
+          docker run -v $PWD:/root -w /root "$IMAGE" /bin/sh run.sh
 
       - run: ls
 
