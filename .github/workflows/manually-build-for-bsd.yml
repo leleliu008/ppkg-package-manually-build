@@ -18,15 +18,18 @@ on:
         description: choose a target to be built for
         type: choice
         options:
+          - freebsd-14.3-amd64
           - freebsd-14.2-amd64
           - freebsd-14.1-amd64
           - freebsd-14.0-amd64
+          - freebsd-13.5-amd64
           - freebsd-13.4-amd64
           - freebsd-13.3-amd64
           - freebsd-13.2-amd64
           - freebsd-13.2-amd64
           - freebsd-13.1-amd64
           - freebsd-13.0-amd64
+          - openbsd-7.7-amd64
           - openbsd-7.6-amd64
           - openbsd-7.5-amd64
           - openbsd-7.4-amd64
@@ -154,7 +157,7 @@ jobs:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
-      - uses: cross-platform-actions/action@v0.27.0
+      - uses: cross-platform-actions/action@master
         with:
           operating_system: ${{ needs.base.outputs.target-platform-name }}
           version: ${{ needs.base.outputs.target-platform-vers }}

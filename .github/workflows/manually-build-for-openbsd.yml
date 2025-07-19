@@ -14,6 +14,17 @@ on:
         options:
           - amd64
 
+      openbsd-version:
+        description: choose a openbsd version to be built with
+        type: choice
+        options:
+          - '7.7'
+          - '7.6'
+          - '7.5'
+          - '7.4'
+          - '7.3'
+          - '7.2'
+
       profile:
         description: choose a build profile
         type: choice
@@ -30,35 +41,57 @@ on:
           - '-v'
           - '-x'
 
+      bundle-type:
+        description: choose a pack type
+        type: choice
+        options:
+          - .tar.xz
+          - .tar.lz
+          - .tar.gz
+          - .tar.bz2
+          - .zip
+
+      static:
+        description: create fully statically linked executables
+        type: boolean
+        default: false
+
 jobs:
   build:
-
-    runs-on: macos-12
+    runs-on: ubuntu-latest
 
     steps:
-      - run: brew install openssh
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
 
-      - uses: leleliu008/github-actions-vagrant@main
+      - uses: cross-platform-actions/action@master
         with:
-          mem: 4096
-          box: generic/openbsd7
+          operating_system: openbsd
+          version: ${{ github.event.inputs.openbsd-version }}
+          shell: bash
           run: |
-            run sudo pkg_add curl gtar-- gcc%11
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
 
-            run sudo ln -s /usr/local/bin/gtar /usr/bin/tar
 
-            export HOME=/home/vagrant
-            export LD_LIBRARY_PATH=/usr/local/lib
+            #run sudo pkg_add curl libarchive gcc%11
 
-            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
-            run chmod a+x ppkg
-
-            run ./ppkg setup
+            run ./ppkg setup --syspm
             run ./ppkg update
-            run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
-            run ./ppkg bundle  ${{ github.event.inputs.package-name }} /home/vagrant/.ppkg/packed/${{ github.event.inputs.bundle-type }}
 
-      - run: scp -i $VAGRANT_CWD/.vagrant/machines/default/virtualbox/private_key -o StrictHostKeyChecking=no -r -P 2222 vagrant@127.0.0.1:/home/vagrant/.ppkg/packed/${{ github.event.inputs.package-name }}-*-openbsd-amd64.tar.xz .
+            if [ ${{ github.event.inputs.static }} = true ] ; then
+              FSLE=--static
+            else
+              FSLE=
+            fi
+
+            run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} $FSLE
+            run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - run: pwd
+      - run: ls
 
       - uses: actions/upload-artifact@v4
         with:

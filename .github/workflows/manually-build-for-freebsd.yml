@@ -18,9 +18,11 @@ on:
         description: choose a freebsd version to be built with
         type: choice
         options:
+          - '14.3'
           - '14.2'
           - '14.1'
           - '14.0'
+          - '13.5'
           - '13.4'
           - '13.3'
           - '13.2'
@@ -73,9 +75,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
 
-      - uses: cross-platform-actions/action@v0.25.0
+      - uses: cross-platform-actions/action@master
         with:
           operating_system: freebsd
           version: ${{ github.event.inputs.freebsd-version }}
@@ -87,11 +90,8 @@ jobs:
             }
 
 
-            run sudo pkg update
-            run sudo pkg install -y gcc curl libnghttp2
-
-            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
-            run chmod a+x ppkg
+            #run sudo pkg update
+            #run sudo pkg install -y gcc curl libnghttp2
 
             run ./ppkg setup --syspm
             run ./ppkg update
