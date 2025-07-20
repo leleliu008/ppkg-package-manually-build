@@ -85,7 +85,6 @@ on:
 jobs:
 
   base:
-    if : ${{ github.event.inputs.cross-compiling != 'true' }}
 
     runs-on: ubuntu-latest
 
@@ -123,6 +122,8 @@ jobs:
 
   cross:
     if : ${{ github.event.inputs.cross-compiling == 'true' }}
+
+    needs: base
 
     runs-on: ubuntu-latest
 

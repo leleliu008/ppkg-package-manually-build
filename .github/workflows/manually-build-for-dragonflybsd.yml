@@ -74,10 +74,6 @@ jobs:
               eval "$@"
             }
 
-
-            #run pkg update
-            #run pkg install -y gcc curl libnghttp2
-
             run ./ppkg setup --syspm
             run ./ppkg update
 

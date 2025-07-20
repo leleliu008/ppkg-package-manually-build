@@ -75,9 +75,6 @@ jobs:
               eval "$@"
             }
 
-
-            #run sudo pkg_add curl libarchive gcc%11
-
             run ./ppkg setup --syspm
             run ./ppkg update
 
