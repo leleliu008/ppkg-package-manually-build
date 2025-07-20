@@ -41,7 +41,7 @@ on:
           - '-x'
 
       bundle-type:
-        description: choose a pack type
+        description: choose a bundle type
         type: choice
         options:
           - .tar.xz
