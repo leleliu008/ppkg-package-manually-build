@@ -128,6 +128,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - run: sudo apt -y update
+      - run: sudo apt -y install clang lld
+
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
