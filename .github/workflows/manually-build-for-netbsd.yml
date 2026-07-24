@@ -50,6 +50,11 @@ on:
           - .tar.bz2
           - .zip
 
+      syspm:
+        description: use system package manager instaed of uppm
+        type: boolean
+        default: false
+
       static:
         description: create fully statically linked executables
         type: boolean
@@ -85,7 +90,15 @@ jobs:
               eval "$@"
             }
 
-            run ./ppkg setup
+            if [ ${{ github.event.inputs.syspm }} = true ] ; then
+              SYSPM=--syspm
+            else
+              SYSPM=
+            fi
+
+            export GITHUB_ACTIONS=true
+
+            run ./ppkg setup $SYSPM
             run ./ppkg update
 
             if [ ${{ github.event.inputs.static }} = true ] ; then
