@@ -79,6 +79,8 @@ jobs:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
       - run: chmod a+x ppkg
 
+      - run: curl -LO https://curl.se/ca/cacert.pem
+
       - uses: cross-platform-actions/action@master
         with:
           operating_system: netbsd
@@ -97,6 +99,8 @@ jobs:
             fi
 
             export GITHUB_ACTIONS=true
+
+            export SSL_CERT_FILE="$PWD/cacert.pem"
 
             run ./ppkg setup $SYSPM
             run ./ppkg update
