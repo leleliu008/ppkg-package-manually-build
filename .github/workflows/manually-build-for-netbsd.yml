@@ -161,4 +161,4 @@ jobs:
 
           printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
 
-      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes '${{ github.repositoryUrl }}/actions/runs/${{ github.run_id }}'
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
