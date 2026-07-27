@@ -49,6 +49,14 @@ on:
           - .tar.bz2
           - .zip
 
+      runner:
+        description: choose a GitHub Actions runner
+        type: choice
+        options:
+          - macos-26
+          - macos-15
+          - macos-14
+
       publish:
         description: publish as GitHub release
         type: boolean
@@ -61,30 +69,9 @@ on:
 
 jobs:
 
-  base:
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - id:  prepare
-        run: |
-          if [ ${{ github.event.inputs.target-arch }} = arm64 ] ; then
-            RUNNER=macos-15
-          else
-            RUNNER=macos-13
-          fi
-
-          printf 'RUNNER=%s\n' "$RUNNER" >> "$GITHUB_OUTPUT"
-
-    outputs:
-      runner: ${{ steps.prepare.outputs.RUNNER }}
-
-
   build:
 
-    needs: base
-
-    runs-on: ${{ needs.base.outputs.runner }}
+    runs-on: ${{ github.event.inputs.runner }}
 
     steps:
       - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
@@ -97,10 +84,13 @@ jobs:
       - run: ./ppkg install macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }}
       - run: ./ppkg bundle  macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}-macos-${{ github.event.inputs.target-version }}-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   publish:
@@ -125,13 +115,17 @@ jobs:
       - run: git -c init.defaultBranch=master init
       - run: git remote add origin ${{ github.repositoryUrl }}
 
-      - run: sha256sum *${{ github.event.inputs.bundle-type }} > notes.md
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
 
-      - run: |
+      - id: tagname
+        run: |
           if [ -z "${{ github.event.inputs.tagname }}" ] ; then
-            TAGNAME="$(ls *${{ github.event.inputs.bundle-type }})"
+              TAGNAME='${{ steps.filename.outputs.FILENAME }}'
           else
-            TAGNAME=${{ github.event.inputs.tagname }}
+              TAGNAME='${{ github.event.inputs.tagname }}'
           fi
 
-          gh release create "$TAGNAME" *${{ github.event.inputs.bundle-type }} --title "$TAGNAME" --notes-file notes.md
+          printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
+
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
