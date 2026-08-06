@@ -207,7 +207,7 @@ jobs:
 
 
   publish:
-    needs: build
+    needs: [cross, native]
     if: github.event.inputs.publish == 'true'
 
     runs-on: ubuntu-latest
