@@ -18,6 +18,8 @@ on:
         description: choose a openbsd version to be built with
         type: choice
         options:
+          - '7.9'
+          - '7.8'
           - '7.7'
           - '7.6'
           - '7.5'
@@ -56,6 +58,17 @@ on:
         type: boolean
         default: false
 
+      publish:
+        description: publish as GitHub release
+        type: boolean
+        default: false
+
+      tagname:
+        description: GitHub release tagname
+        required: false
+
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -90,7 +103,43 @@ jobs:
       - run: pwd
       - run: ls
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---openbsd-amd64.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
+
+
+  publish:
+    needs: build
+    if: github.event.inputs.publish == 'true'
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*'
+          path: .
+          merge-multiple: true
+
+      - run: ls -a
+
+      # to avaid: failed to run git: fatal: not a git repository (or any of the parent directories): .git
+      - run: git -c init.defaultBranch=master init
+      - run: git remote add origin ${{ github.repositoryUrl }}
+
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
+      - id: tagname
+        run: |
+          TAGNAME='${{ steps.filename.outputs.FILENAME }}'
+          printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
+
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'

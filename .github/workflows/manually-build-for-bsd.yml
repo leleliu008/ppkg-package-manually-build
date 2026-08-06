@@ -18,6 +18,9 @@ on:
         description: choose a target to be built for
         type: choice
         options:
+          - freebsd-15.1-amd64
+          - freebsd-15.0-amd64
+          - freebsd-14.4-amd64
           - freebsd-14.3-amd64
           - freebsd-14.2-amd64
           - freebsd-14.1-amd64
@@ -29,6 +32,8 @@ on:
           - freebsd-13.2-amd64
           - freebsd-13.1-amd64
           - freebsd-13.0-amd64
+          - openbsd-7.9-amd64
+          - openbsd-7.8-amd64
           - openbsd-7.7-amd64
           - openbsd-7.6-amd64
           - openbsd-7.5-amd64
@@ -81,6 +86,17 @@ on:
         description: cross compiling
         type: boolean
         default: false
+
+      publish:
+        description: publish as GitHub release
+        type: boolean
+        default: false
+
+      tagname:
+        description: GitHub release tagname
+        required: false
+
+
 
 jobs:
 
@@ -141,11 +157,13 @@ jobs:
 
       - run: ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
-
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   native:
@@ -179,7 +197,48 @@ jobs:
             run ./ppkg install ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} --profile=${{ github.event.inputs.profile }} ${{ github.event.inputs.log-level }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  ${{ github.event.inputs.target }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---${{ github.event.inputs.target }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
+
+
+  publish:
+    needs: build
+    if: github.event.inputs.publish == 'true'
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*'
+          path: .
+          merge-multiple: true
+
+      - run: ls -a
+
+      # to avaid: failed to run git: fatal: not a git repository (or any of the parent directories): .git
+      - run: git -c init.defaultBranch=master init
+      - run: git remote add origin ${{ github.repositoryUrl }}
+
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
+      - id: tagname
+        run: |
+          if [ -z "${{ github.event.inputs.tagname }}" ] ; then
+              TAGNAME='${{ steps.filename.outputs.FILENAME }}'
+          else
+              TAGNAME='${{ github.event.inputs.tagname }}'
+          fi
+
+          printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
+
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'

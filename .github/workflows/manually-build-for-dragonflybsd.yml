@@ -54,6 +54,17 @@ on:
         type: boolean
         default: false
 
+      publish:
+        description: publish as GitHub release
+        type: boolean
+        default: false
+
+      tagname:
+        description: GitHub release tagname
+        required: false
+
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -89,7 +100,48 @@ jobs:
       - run: pwd
       - run: ls
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---dragonflybsd-x86_64${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
+
+
+  publish:
+    needs: build
+    if: github.event.inputs.publish == 'true'
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*'
+          path: .
+          merge-multiple: true
+
+      - run: ls -a
+
+      # to avaid: failed to run git: fatal: not a git repository (or any of the parent directories): .git
+      - run: git -c init.defaultBranch=master init
+      - run: git remote add origin ${{ github.repositoryUrl }}
+
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
+      - id: tagname
+        run: |
+          if [ -z "${{ github.event.inputs.tagname }}" ] ; then
+              TAGNAME='${{ steps.filename.outputs.FILENAME }}'
+          else
+              TAGNAME='${{ github.event.inputs.tagname }}'
+          fi
+
+          printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
+
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} ${{ steps.filename.outputs.FILENAME }} --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
