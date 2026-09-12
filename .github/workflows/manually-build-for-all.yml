@@ -22,7 +22,7 @@ on:
         description: choose a bundle type
         type: choice
         options:
-          - ${{ github.event.inputs.bundle-type }}
+          - .tar.xz
           - .tar.lz
           - .tar.gz
           - .tar.bz2
