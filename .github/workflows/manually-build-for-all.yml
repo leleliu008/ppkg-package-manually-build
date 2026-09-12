@@ -337,8 +337,8 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ github.event.inputs.package-name }}---macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
 
 
   linux:
