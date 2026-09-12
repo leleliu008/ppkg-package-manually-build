@@ -22,7 +22,7 @@ on:
         description: choose a bundle type
         type: choice
         options:
-          - .tar.xz
+          - ${{ github.event.inputs.bundle-type }}
           - .tar.lz
           - .tar.gz
           - .tar.bz2
@@ -97,6 +97,55 @@ jobs:
     outputs:
       syspm:  ${{ steps.prepare.outputs.SYSPM }}
       static: ${{ steps.prepare.outputs.STATIC }}
+
+
+  dragonflybsd:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['6.4']
+        profile: [debug, release]
+
+    steps:
+      - run: curl -LO https://github.com/leleliu008/uppm-package-repository-dragonflybsd-6.4-x86_64/releases/download/2023.12.04/curl-8.3.0-dragonflybsd-6.4-x86_64${{ github.event.inputs.bundle-type }}
+      - run: tar xvf curl-8.3.0-dragonflybsd-6.4-x86_64${{ github.event.inputs.bundle-type }} --strip-components=1
+      - run: rm -rf include/ lib/ share/
+
+      - uses: vmactions/dragonflybsd-vm@v1
+        with:
+          release: "${{ matrix.version }}.0"
+          usesh: true
+          sync: rsync
+          copyback: true
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            set -e
+
+            export PATH="$PWD/bin:$PATH"
+
+            # I have no idea why curl can not be installed via pkg
+            #run pkg install -y curl libnghttp2 gcc
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+            run ./ppkg setup ${{ needs.base.outputs.syspm }}
+            run ./ppkg update
+            run ./ppkg install dragonflybsd-${{ matrix.version }}-x86_64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+            run ./ppkg bundle  dragonflybsd-${{ matrix.version }}-x86_64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---dragonflybsd-${{ matrix.version }}-x86_64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-dragonflybsd-${{ matrix.version }}-x86_64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
 
 
   midnightbsd:
