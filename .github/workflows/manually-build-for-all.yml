@@ -1,0 +1,431 @@
+name: manually build package for All platforms
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      package-name:
+        description: input the package name to be built
+        required: true
+
+      profile:
+        description: choose a build profile
+        type: choice
+        options:
+          - release
+          - debug
+
+      bundle-type:
+        description: choose a bundle type
+        type: choice
+        options:
+          - .tar.xz
+          - .tar.lz
+          - .tar.gz
+          - .tar.bz2
+          - .zip
+
+      log-level:
+        description: choose a log-level
+        type: choice
+        options:
+          - ''
+          - '-q'
+          - '-v'
+          - '-x'
+
+      syspm:
+        description: use system package manager instaed of uppm
+        type: boolean
+        default: false
+
+      static:
+        description: create fully statically linked executables
+        type: boolean
+        default: false
+
+      cross-compiling:
+        description: cross compiling
+        type: boolean
+        default: false
+
+      publish:
+        description: publish as GitHub release
+        type: boolean
+        default: false
+
+      tagname:
+        description: GitHub release tagname
+        required: false
+
+
+jobs:
+
+  base:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - id:  prepare
+        run: |
+          if [ ${{ github.event.inputs.static }} = true ] ; then
+            STATIC=--static
+          else
+            STATIC=
+          fi
+
+          if [ ${{ github.event.inputs.portable }} = true ] ; then
+            PORTABLE=--portable
+          else
+            PORTABLE=
+          fi
+
+          if [ ${{ github.event.inputs.syspm }} = true ] ; then
+            SYSPM=--syspm
+          else
+            SYSPM=
+          fi
+
+          printf '%s\n' "
+          STATIC=$STATIC
+          SYSPM=$SYSPM
+          " >> "$GITHUB_OUTPUT"
+
+    outputs:
+      syspm:  ${{ steps.prepare.outputs.SYSPM }}
+      static: ${{ steps.prepare.outputs.STATIC }}
+
+
+  midnightbsd:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['4.0']
+        profile: [debug, release]
+
+    steps:
+      - uses: cross-platform-actions/action@master
+        with:
+          operating_system: midnightbsd
+          version: "${{ matrix.version }}.4"
+          shell: bash
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+            run ./ppkg setup ${{ needs.base.outputs.syspm }}
+            run ./ppkg update
+            run ./ppkg install midnightbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+            run ./ppkg bundle  midnightbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---midnightbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-midnightbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  freebsd:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['15.1', '15.0', '14.4', '14.3', '14.2', '14.1', '14.0', '13.5', '13.4', '13.3', '13.2']
+        profile: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cross-platform-actions/action@master
+        with:
+          operating_system: freebsd
+          version: ${{ matrix.version }}
+          shell: bash
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            run sudo pkg install -y curl
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+
+            run ./ppkg setup ${{ needs.base.outputs.syspm }}
+            run ./ppkg update
+            run ./ppkg install freebsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+            run ./ppkg bundle  freebsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---freebsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-freebsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  openbsd:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['7.9', '7.8', '7.7', '7.6', '7.5', '7.4', '7.3', '7.2']
+        profile: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cross-platform-actions/action@master
+        with:
+          operating_system: openbsd
+          version: ${{ matrix.version }}
+          shell: bash
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            run sudo pkg_add curl
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+
+            run ./ppkg setup ${{ needs.base.outputs.syspm }}
+            run ./ppkg update
+            run ./ppkg install openbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+            run ./ppkg bundle  openbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---openbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-openbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  netbsd:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['10.1', '10.0', '9.4', '9.3', '9.2']
+        profile: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - run: curl -LO https://curl.se/ca/cacert.pem
+
+      - uses: cross-platform-actions/action@master
+        with:
+          operating_system: netbsd
+          version: ${{ matrix.version }}
+          shell: bash
+          run: |
+            run() {
+              printf "\033[0;35m==>\033[0m \033[0;32m%b\n\033[0m" "$*"
+              eval "$@"
+            }
+
+            run export SSL_CERT_FILE="$PWD/cacert.pem"
+
+            run curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+            run chmod a+x ppkg
+
+            run ./ppkg setup
+            run ./ppkg update
+            run ./ppkg install netbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+            run ./ppkg bundle  netbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---netbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-netbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  macos:
+
+    needs: base
+
+    runs-on: macos-26
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target-version: ['10.15', '11.0', '12.0', '13.0', '14.0', '15.0', "26.0"]
+        target-arch: [x86_64, arm64]
+        profile: [debug, release]
+
+    steps:
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+      - run: chmod a+x ppkg
+
+      - run: ./ppkg setup
+      - run: ./ppkg update
+      - run: ./ppkg install macos-${{ matrix.target-version }}-${{ matrix.target-arch }}/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+      - run: ./ppkg bundle  macos-${{ matrix.target-version }}-${{ matrix.target-arch }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  linux:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target-arch: [loongarch64, x86_64, aarch64, ppc64le, riscv64, s390x]
+        profile: [debug, release]
+
+    steps:
+      - run: |
+          cat > run.sh <<EOF
+          set -ex
+
+          COLOR_GREEN='\033[0;32m'
+          COLOR_PURPLE='\033[0;35m'
+          COLOR_OFF='\033[0m'
+
+          echo() {
+              printf '%b\n' "\$*"
+          }
+
+          run() {
+              echo "\${COLOR_PURPLE}==>\${COLOR_OFF} \${COLOR_GREEN}\$@\${COLOR_OFF}"
+              eval "\$*"
+          }
+
+          ########################################################################
+
+          run uname -a
+          run id
+          run pwd
+
+          export GITHUB_ACTIONS=true
+
+          ########################################################################
+
+          run wget https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg
+          run chmod a+x ppkg
+          run ./ppkg setup
+          run ./ppkg update
+          run ./ppkg install ${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+          run ./ppkg bundle  ${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+          EOF
+
+      - run: curl -LO https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/master/alpine-chroot-install
+      - run: chmod +x alpine-chroot-install
+
+      - run: |
+          sed -i -e '/APK_TOOLS_URI:=/c APK_TOOLS_URI=https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v3.0.7/x86_64/apk.static' \
+                 -e '/APK_TOOLS_SHA256:=/c APK_TOOLS_SHA256=c07bf5356eacc9dd7a8c56bc537f46702f007170287403299d52a04264e74b3c' \
+                 alpine-chroot-install
+
+      - run: sudo ./alpine-chroot-install -d /alpine -a ${{ matrix.target-arch }} -p wget -p g++
+      - run: /alpine/enter-chroot sh run.sh
+      - run: /alpine/destroy
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---linux-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          path: ${{ github.event.inputs.package-name }}-*-linux-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+
+
+  android:
+
+    needs: base
+
+    runs-on: ubuntu-latest
+
+    container: ubuntu:24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [debug, release]
+
+    steps:
+      - run: apt -y update
+      - run: apt -y install curl
+
+      - run: curl -LO https://raw.githubusercontent.com/leleliu008/ndk-pkg/master/ndk-pkg
+      - run: chmod +x ndk-pkg
+
+      - run: ./ndk-pkg about
+      - run: ./ndk-pkg setup
+      - run: ./ndk-pkg update
+
+      - run: ./ndk-pkg install android-35-arm64-v8a,armeabi-v7a,x86_64,x86/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
+
+      - run: ./ndk-pkg bundle  android-35-arm64-v8a/${{ github.event.inputs.package-name }}   ${{ github.event.inputs.bundle-type }}
+      - run: ./ndk-pkg bundle  android-35-armeabi-v7a/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
+      - run: ./ndk-pkg bundle  android-35-x86_64/${{ github.event.inputs.package-name }}      ${{ github.event.inputs.bundle-type }}
+      - run: ./ndk-pkg bundle  android-35-x86/${{ github.event.inputs.package-name }}         ${{ github.event.inputs.bundle-type }}
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ github.event.inputs.package-name }}---android-${{ matrix.profile }}
+          path: ${{ github.event.inputs.package-name }}-*-android-*${{ github.event.inputs.bundle-type }}
+
+
+  publish:
+    if: github.event.inputs.publish == 'true'
+
+    needs: [dragonflybsd, midnightbsd, freebsd, openbsd, netbsd, macos, linux, android]
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*'
+          path: .
+          merge-multiple: true
+
+      - run: ls -a
+
+      # to avaid: failed to run git: fatal: not a git repository (or any of the parent directories): .git
+      - run: git -c init.defaultBranch=master init
+      - run: git remote add origin ${{ github.repositoryUrl }}
+
+      - id: tagname
+        run: |
+          if [ -z "${{ github.event.inputs.tagname }}" ] ; then
+              TAGNAME="${{ github.event.inputs.package-name }}-$(date +%Y.%m.%d)"
+          else
+              TAGNAME='${{ github.event.inputs.tagname }}'
+          fi
+
+          printf 'TAGNAME=%s\n' "$TAGNAME" >> "$GITHUB_OUTPUT"
+
+      - run: gh release create ${{ steps.tagname.outputs.TAGNAME }} * --title ${{ steps.tagname.outputs.TAGNAME }} --notes 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
