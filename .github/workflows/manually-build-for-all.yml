@@ -142,10 +142,13 @@ jobs:
             run ./ppkg install dragonflybsd-${{ matrix.version }}-x86_64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  dragonflybsd-${{ matrix.version }}-x86_64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---dragonflybsd-${{ matrix.version }}-x86_64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-dragonflybsd-${{ matrix.version }}-x86_64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   midnightbsd:
@@ -179,10 +182,13 @@ jobs:
             run ./ppkg install midnightbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  midnightbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---midnightbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-midnightbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   freebsd:
@@ -221,10 +227,13 @@ jobs:
             run ./ppkg install freebsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  freebsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---freebsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-freebsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   openbsd:
@@ -263,10 +272,13 @@ jobs:
             run ./ppkg install openbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  openbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---openbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-openbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   netbsd:
@@ -307,10 +319,13 @@ jobs:
             run ./ppkg install netbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
             run ./ppkg bundle  netbsd-${{ matrix.version }}-amd64/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---netbsd-${{ matrix.version }}-amd64-${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-netbsd-${{ matrix.version }}-amd64.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   macos:
@@ -335,10 +350,13 @@ jobs:
       - run: ./ppkg install macos-${{ matrix.target-version }}-${{ matrix.target-arch }}/${{ github.event.inputs.package-name }} --profile=${{ matrix.profile }} ${{ needs.base.outputs.static }}
       - run: ./ppkg bundle  macos-${{ matrix.target-version }}-${{ matrix.target-arch }}/${{ github.event.inputs.package-name }} ${{ github.event.inputs.bundle-type }}
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-macos-${{ matrix.target-version }}-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   linux:
@@ -401,10 +419,13 @@ jobs:
       - run: /alpine/enter-chroot sh run.sh
       - run: /alpine/destroy
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---linux-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
-          path: ${{ github.event.inputs.package-name }}-*-linux-${{ matrix.target-arch }}.${{ matrix.profile }}${{ github.event.inputs.bundle-type }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   android:
