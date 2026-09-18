@@ -189,10 +189,13 @@ jobs:
 
       - run: ls
 
+      - id: filename
+        run: printf 'FILENAME=%s\n' "$(ls *${{ github.event.inputs.bundle-type }})" >> "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ github.event.inputs.package-name }}---linux-glibc-${{ github.event.inputs.target-arch }}.${{ github.event.inputs.profile }}${{ github.event.inputs.bundle-type }}
-          path: '*${{ github.event.inputs.bundle-type }}'
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ${{ steps.filename.outputs.FILENAME }}
 
 
   publish:
